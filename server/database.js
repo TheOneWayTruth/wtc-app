@@ -1,4 +1,19 @@
 const mysql = require("mysql2");
+//set up mariadb on init
+//install mariadb version 10.11.1 RC
+/*Release date: 2022-11-17
+
+File name: mariadb-10.11.1-winx64.msi
+
+File size: 68.2 MB
+
+Download galera-26.4.13*/
+
+//use HeidiDB or comandline
+
+//database name "wtcapp"
+
+//table name "users"
 
 /*Benutzer:
     ID INT AutoIncrement PRIMARY KEY
