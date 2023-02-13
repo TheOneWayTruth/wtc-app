@@ -1,9 +1,14 @@
 const express = require("express");
 const https = require("https");
+const http = require("http");
 const fs = require("fs");
+const Database = require("./database");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORThttps = process.env.PORT || 3000;
+const PORThttp = 80;
+
+const db = new Database();
 
 var privateKey = fs.readFileSync("server.key", "utf8");
 var certificate = fs.readFileSync("server.crt", "utf8");
@@ -14,20 +19,42 @@ var credentials = {
   passphrase: "tbhhsy78",
 };
 
-app.get("/all", (req, res) => {
+app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader(
     "Access-Control-Allow-Headers",
-    "X-Requested-With, content-type"
+    "Origin, X-Requested-With, Content-Type, Accept"
   );
-  res.setHeader("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS");
-  res.setHeader("X-Powered-By", " 3.2.1");
-  res.setHeader("Content-Type", "application/json;charset=utf-8");
-  res.send("Hello World");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, OPTIONS"
+  );
+  next();
 });
 
-var httpsServer = https.createServer(credentials, app);
+app.get("/allUsers", async (req, res) => {
+  res.setHeader("Content-Type", "application/json;charset=utf-8");
+  try {
+    const results = await db.query("SELECT * FROM users");
+    res.send(JSON.stringify(results));
+  } catch (error) {
+    res.send(error.message);
+  }
+});
 
-httpsServer.listen(PORT, () => {
-  console.log("server starting on port : " + PORT);
+const httpsServer = https.createServer(credentials, app);
+const httpServer = http.createServer(app);
+
+httpsServer.listen(PORThttps, () => {
+  console.log(`HTTPS Server running on port ${PORThttps}`);
+});
+
+httpServer.listen(PORThttp, () => {
+  console.log(`HTTP Server running on port ${PORThttp}`);
+});
+
+process.on("SIGINT", async () => {
+  console.log("Closing database connection");
+  await db.close();
+  process.exit();
 });
